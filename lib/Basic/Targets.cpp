@@ -31,6 +31,7 @@
 #include "Targets/PPC.h"
 #include "Targets/RISCV.h"
 #include "Targets/SPIR.h"
+#include "Targets/Simple.h"
 #include "Targets/Sparc.h"
 #include "Targets/SystemZ.h"
 #include "Targets/TCE.h"
@@ -382,6 +383,14 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
     if (os == llvm::Triple::Linux)
       return new LinuxTargetInfo<RISCV64TargetInfo>(Triple, Opts);
     return new RISCV64TargetInfo(Triple, Opts);
+
+  case llvm::Triple::simple:
+    switch (os) {
+    case llvm::Triple::Linux:
+      return new LinuxTargetInfo<SimpleTargetInfo>(Triple, Opts);
+    default:
+      return new SimpleTargetInfo(Triple, Opts);
+    }
 
   case llvm::Triple::sparc:
     switch (os) {

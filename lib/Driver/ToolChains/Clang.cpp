@@ -13,6 +13,7 @@
 #include "Arch/Mips.h"
 #include "Arch/PPC.h"
 #include "Arch/RISCV.h"
+#include "Arch/Simple.h"
 #include "Arch/Sparc.h"
 #include "Arch/SystemZ.h"
 #include "Arch/X86.h"
@@ -1413,6 +1414,10 @@ void Clang::RenderTargetOptions(const llvm::Triple &EffectiveTriple,
     AddRISCVTargetArgs(Args, CmdArgs);
     break;
 
+  case llvm::Triple::simple:
+    AddSimpleTargetArgs(Args, CmdArgs);
+    break;
+
   case llvm::Triple::sparc:
   case llvm::Triple::sparcel:
   case llvm::Triple::sparcv9:
@@ -1707,6 +1712,24 @@ void Clang::AddRISCVTargetArgs(const ArgList &Args,
 
   CmdArgs.push_back("-target-abi");
   CmdArgs.push_back(ABIName);
+}
+
+void Clang::AddSimpleTargetArgs(const ArgList &Args,
+                                ArgStringList &CmdArgs) const {
+  simple::FloatABI FloatABI =
+      simple::getSimpleFloatABI(getToolChain().getDriver(), Args);
+
+  if (FloatABI == simple::FloatABI::Soft) {
+    // Floating point operations and argument passing are soft.
+    CmdArgs.push_back("-msoft-float");
+    CmdArgs.push_back("-mfloat-abi");
+    CmdArgs.push_back("soft");
+  } else {
+    // Floating point operations and argument passing are hard.
+    assert(FloatABI == simple::FloatABI::Hard && "Invalid float abi!");
+    CmdArgs.push_back("-mfloat-abi");
+    CmdArgs.push_back("hard");
+  }
 }
 
 void Clang::AddSparcTargetArgs(const ArgList &Args,

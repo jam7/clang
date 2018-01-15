@@ -36,6 +36,7 @@
 #include "ToolChains/NetBSD.h"
 #include "ToolChains/OpenBSD.h"
 #include "ToolChains/PS4CPU.h"
+#include "ToolChains/Simple.h"
 #include "ToolChains/Solaris.h"
 #include "ToolChains/TCE.h"
 #include "ToolChains/WebAssembly.h"
@@ -4204,6 +4205,8 @@ const ToolChain &Driver::getToolChain(const ArgList &Args,
                                                               Args);
         else if (toolchains::BareMetal::handlesTarget(Target))
           TC = llvm::make_unique<toolchains::BareMetal>(*this, Target, Args);
+        else if (toolchains::Simple::handlesTarget(Target))
+          TC = llvm::make_unique<toolchains::Simple>(*this, Target, Args);
         else if (Target.isOSBinFormatELF())
           TC = llvm::make_unique<toolchains::Generic_ELF>(*this, Target, Args);
         else if (Target.isOSBinFormatMachO())

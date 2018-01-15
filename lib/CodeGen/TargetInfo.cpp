@@ -7768,6 +7768,49 @@ AMDGPUTargetCodeGenInfo::getLLVMSyncScopeID(SyncScope S,
 }
 
 //===----------------------------------------------------------------------===//
+// Simple ABI Implementation.
+// Based on the SPARC Compliance Definition version 2.4.1.
+//
+// Ensures that complex values are passed in registers.
+//
+namespace {
+class SimpleABIInfo : public DefaultABIInfo {
+public:
+  SimpleABIInfo(CodeGenTypes &CGT) : DefaultABIInfo(CGT) {}
+
+private:
+  ABIArgInfo classifyReturnType(QualType RetTy) const;
+  void computeInfo(CGFunctionInfo &FI) const override;
+};
+} // end anonymous namespace
+
+
+ABIArgInfo
+SimpleABIInfo::classifyReturnType(QualType Ty) const {
+  if (Ty->isAnyComplexType()) {
+    return ABIArgInfo::getDirect();
+  }
+  else {
+    return DefaultABIInfo::classifyReturnType(Ty);
+  }
+}
+
+void SimpleABIInfo::computeInfo(CGFunctionInfo &FI) const {
+
+  FI.getReturnInfo() = classifyReturnType(FI.getReturnType());
+  for (auto &Arg : FI.arguments())
+    Arg.info = classifyArgumentType(Arg.type);
+}
+
+namespace {
+class SimpleTargetCodeGenInfo : public TargetCodeGenInfo {
+public:
+  SimpleTargetCodeGenInfo(CodeGenTypes &CGT)
+    : TargetCodeGenInfo(new SimpleABIInfo(CGT)) {}
+};
+} // end anonymous namespace
+
+//===----------------------------------------------------------------------===//
 // SPARC v8 ABI Implementation.
 // Based on the SPARC Compliance Definition version 2.4.1.
 //
